@@ -1,0 +1,247 @@
+@import "tailwindcss";
+
+/*
+ * Palette: #244855 (deep teal), #E64833 (terracotta), #874F41 (warm brown),
+ *          #90AEAD (sage), #FBE9D0 (cream)
+ */
+
+:root {
+  /* === Core === */
+  --color-primary: #F05D3E;
+  --color-secondary: #9A6B5A;
+  --color-accent: #E09455;
+  --color-bg: #111A22;
+  --color-surface: #1A2632;
+  --color-surface-raised: #222F3E;
+  --color-border: #2E3E4E;
+  --color-border-subtle: #243040;
+  --color-text: #EDE4D4;
+  --color-text-muted: #7E8E9A;
+  --color-text-on-primary: #FFF5EB;
+  --color-text-on-accent: #FFFFFF;
+
+  /* === Semantic === */
+  --color-success: #5ECE7B;
+  --color-warning: #E8B44C;
+  --color-error: #F05D3E;
+
+  /* === Chord card tints === */
+  --chord-major-bg: #1A2E28;
+  --chord-major-border: #F05D3E;
+  --chord-minor-bg: #1A2238;
+  --chord-minor-border: #7BA4C4;
+  --chord-7th-bg: #1A2E22;
+  --chord-7th-border: #5ECE7B;
+  --chord-sus-bg: #2A2820;
+  --chord-sus-border: #E09455;
+  --chord-dim-bg: #2A1E22;
+  --chord-dim-border: #B06A5A;
+
+  /* === Key Chord Table === */
+  --kct-major-bg: #182A24;
+  --kct-major-text: #EDE4D4;
+  --kct-minor-bg: #1E2438;
+  --kct-minor-text: #D0D8E4;
+  --kct-dim-bg: #2A1E22;
+  --kct-dim-text: #E4D0D0;
+  --kct-header-bg: #151E28;
+  --kct-row-hover: rgba(240, 93, 62, 0.08);
+  --kct-selected-outline: var(--color-primary);
+
+  /* === SVG diagram === */
+  --diagram-dot: var(--color-primary);
+  --diagram-dot-text: #111A22;
+  --diagram-nut: #D4C8B4;
+  --diagram-fret: #3A3A3A;
+  --diagram-string: #A0958A;
+  --diagram-open: #5ECE7B;
+  --diagram-mute: #555555;
+
+  /* === Interval colors (Chord Analyzer) === */
+  --interval-root: #F05D3E;
+  --interval-third: #4EAAED;
+  --interval-fourth: #26C6AA;
+  --interval-fifth: #5ECE7B;
+  --interval-sixth: #E09455;
+  --interval-seventh: #B47EF0;
+  --interval-ninth: #F4C542;
+  --interval-eleventh: #F57DA0;
+  --interval-thirteenth: #4DD8E8;
+
+  /* === Neck === */
+  --neck-bg: #1E2218;
+  --neck-fret-marker: rgba(200, 190, 170, 0.18);
+  --neck-barre-overlay: rgba(60, 50, 40, 0.35);
+
+  /* === Transition colors === */
+  --transition-stay: #5ECE7B;
+  --transition-move: #4EAAED;
+  --transition-lift: #666666;
+  --transition-place: #F4C542;
+  --transition-arrow: #4EAAED;
+
+  /* === Harmonic Function Colors === */
+  --hf-tonic: #5ECE7B;
+  --hf-supertonic: #7BA4C4;
+  --hf-mediant: #A78BCA;
+  --hf-subdominant: #4EAAED;
+  --hf-dominant: #F05D3E;
+  --hf-submediant: #C77DBA;
+  --hf-leading: #E88B9E;
+  --hf-nondiatonic: #E09455;
+  --hf-tonic-bg: rgba(94, 206, 123, 0.15);
+  --hf-supertonic-bg: rgba(123, 164, 196, 0.15);
+  --hf-mediant-bg: rgba(167, 139, 202, 0.15);
+  --hf-subdominant-bg: rgba(78, 170, 237, 0.15);
+  --hf-dominant-bg: rgba(240, 93, 62, 0.15);
+  --hf-submediant-bg: rgba(199, 125, 186, 0.15);
+  --hf-leading-bg: rgba(232, 139, 158, 0.15);
+  --hf-nondiatonic-bg: rgba(224, 148, 85, 0.15);
+
+  /* === Songbook === */
+  --songbook-chord-font: 'JetBrains Mono', monospace;
+
+  /* === Shadows === */
+  --shadow-sm: 0 1px 4px rgba(0,0,0,0.30);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.40);
+  --shadow-primary: 0 2px 12px rgba(240, 93, 62, 0.35);
+}
+
+[data-theme="light"] {
+  /* === Core === */
+  --color-primary: #E84D35;
+  --color-secondary: #8B6050;
+  --color-accent: #D08540;
+  --color-bg: #F5F6F8;
+  --color-surface: #FFFFFF;
+  --color-surface-raised: #FFFFFF;
+  --color-border: #DEE2E8;
+  --color-border-subtle: #EDF0F4;
+  --color-text: #1A2B3A;
+  --color-text-muted: #6B7B8A;
+  --color-text-on-primary: #FFFFFF;
+  --color-text-on-accent: #FFFFFF;
+
+  /* === Semantic === */
+  --color-success: #2D9B4E;
+  --color-warning: #C48A10;
+  --color-error: #E84D35;
+
+  /* === Chord card tints === */
+  --chord-major-bg: #EFF6EF;
+  --chord-major-border: #E84D35;
+  --chord-minor-bg: #EDF0F8;
+  --chord-minor-border: #5A8DB8;
+  --chord-7th-bg: #EDF6F0;
+  --chord-7th-border: #2D9B4E;
+  --chord-sus-bg: #F6F0E8;
+  --chord-sus-border: #D08540;
+  --chord-dim-bg: #F6EDED;
+  --chord-dim-border: #A0605A;
+
+  /* === Key Chord Table === */
+  --kct-major-bg: #E2F0E2;
+  --kct-major-text: #1A2B3A;
+  --kct-minor-bg: #E2E6F4;
+  --kct-minor-text: #1A2B3A;
+  --kct-dim-bg: #F4E0E0;
+  --kct-dim-text: #1A2B3A;
+  --kct-header-bg: #ECF0F4;
+  --kct-row-hover: rgba(232, 77, 53, 0.06);
+  --kct-selected-outline: var(--color-primary);
+
+  /* === SVG diagram === */
+  --diagram-dot: var(--color-primary);
+  --diagram-dot-text: #FFFFFF;
+  --diagram-nut: #1A2B3A;
+  --diagram-fret: #D0D4DA;
+  --diagram-string: #8A8A8A;
+  --diagram-open: #2D9B4E;
+  --diagram-mute: #C0C4CA;
+
+  /* === Interval colors === */
+  --interval-root: #E84D35;
+  --interval-third: #2B7EC2;
+  --interval-fourth: #0EA590;
+  --interval-fifth: #2D9B4E;
+  --interval-sixth: #C47A20;
+  --interval-seventh: #7C4DDB;
+  --interval-ninth: #B8900A;
+  --interval-eleventh: #D04A6B;
+  --interval-thirteenth: #0088A0;
+
+  /* === Neck === */
+  --neck-bg: #F0E8DA;
+  --neck-fret-marker: rgba(30, 50, 60, 0.10);
+  --neck-barre-overlay: rgba(120, 100, 70, 0.15);
+
+  /* === Transition colors === */
+  --transition-stay: #2D9B4E;
+  --transition-move: #2B7EC2;
+  --transition-lift: #A0A8B0;
+  --transition-place: #C48A10;
+  --transition-arrow: #2B7EC2;
+
+  /* === Harmonic Function Colors === */
+  --hf-tonic: #2D9B4E;
+  --hf-supertonic: #5A8DB8;
+  --hf-mediant: #7C5DAA;
+  --hf-subdominant: #2B7EC2;
+  --hf-dominant: #E84D35;
+  --hf-submediant: #A85A9A;
+  --hf-leading: #C55A6E;
+  --hf-nondiatonic: #D08540;
+  --hf-tonic-bg: rgba(45, 155, 78, 0.12);
+  --hf-supertonic-bg: rgba(90, 141, 184, 0.12);
+  --hf-mediant-bg: rgba(124, 93, 170, 0.12);
+  --hf-subdominant-bg: rgba(43, 126, 194, 0.12);
+  --hf-dominant-bg: rgba(232, 77, 53, 0.12);
+  --hf-submediant-bg: rgba(168, 90, 154, 0.12);
+  --hf-leading-bg: rgba(197, 90, 110, 0.12);
+  --hf-nondiatonic-bg: rgba(208, 133, 64, 0.12);
+
+  /* === Songbook === */
+  --songbook-chord-font: 'JetBrains Mono', monospace;
+
+  /* === Shadows === */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.06);
+  --shadow-primary: 0 2px 10px rgba(232, 77, 53, 0.22);
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Staggered card animation */
+@keyframes cardFadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes expandRow {
+  from { opacity: 0; transform: scaleY(0.95); }
+  to { opacity: 1; transform: scaleY(1); }
+}
+
+/* Expanded diagram strip: horizontal scroll on mobile */
+@media (max-width: 639px) {
+  .expand-row-grid {
+    grid-template-columns: repeat(7, minmax(110px, 1fr)) !important;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .expand-row-content {
+    overflow-x: auto !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
