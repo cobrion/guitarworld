@@ -24,6 +24,7 @@ export const CHORD_FORMULAS: Record<ChordQuality, IntervalDef[]> = {
   sus2:        [{ semitones: 0, label: 'R' }, { semitones: 2, label: '2' }, { semitones: 7, label: '5' }],
   sus4:        [{ semitones: 0, label: 'R' }, { semitones: 5, label: '4' }, { semitones: 7, label: '5' }],
   add9:        [{ semitones: 0, label: 'R' }, { semitones: 4, label: '3' }, { semitones: 7, label: '5' }, { semitones: 14, label: '9' }],
+  minoradd9:   [{ semitones: 0, label: 'R' }, { semitones: 3, label: 'b3' }, { semitones: 7, label: '5' }, { semitones: 14, label: '9' }],
   dominant9:   [{ semitones: 0, label: 'R' }, { semitones: 4, label: '3' }, { semitones: 7, label: '5' }, { semitones: 10, label: 'b7' }, { semitones: 14, label: '9' }],
   power:       [{ semitones: 0, label: 'R' }, { semitones: 7, label: '5' }],
   minor9:      [{ semitones: 0, label: 'R' }, { semitones: 3, label: 'b3' }, { semitones: 7, label: '5' }, { semitones: 10, label: 'b7' }, { semitones: 14, label: '9' }],
@@ -140,6 +141,7 @@ const QUALITY_DISPLAY: Record<ChordQuality, string> = {
   sus2: 'Suspended 2nd',
   sus4: 'Suspended 4th',
   add9: 'Add 9',
+  minoradd9: 'Minor Add 9',
   dominant9: 'Dominant 9th',
   power: 'Power (5th)',
   minor9: 'Minor 9th',
@@ -268,7 +270,7 @@ export const QUALITY_GROUPS: { label: string; qualities: ChordQuality[] }[] = [
   },
   {
     label: 'Extended',
-    qualities: ['add9', 'dominant9', 'minor9', 'major9', 'dominant11', 'minor11', 'dominant13'],
+    qualities: ['add9', 'minoradd9', 'dominant9', 'minor9', 'major9', 'dominant11', 'minor11', 'dominant13'],
   },
   {
     label: 'Altered',

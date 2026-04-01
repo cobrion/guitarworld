@@ -553,7 +553,7 @@ export const extendedChords: Record<string, ChordVoicingData> = {
       barres: [],
       baseFret: 1,
     }],
-    difficulty: 'intermediate',
+    difficulty: 'advanced',
     chordType: 'extended',
   },
 
@@ -677,15 +677,15 @@ export const extendedChords: Record<string, ChordVoicingData> = {
   },
 
   // Bb9 = Bb-D-F-Ab-C
-  // Use A9 shape barred: x-1-1-1-1-1 at baseFret 1 won't work.
-  // x-1-3-1-3-1 is Bb7. Need to add the 9th (C).
   // x-1-0-1-1-1 baseFret 1: A(1)=Bb, D(0)=D, G(1)=Ab, B(1)=C, E(1)=F
   // = Bb-D-Ab-C-F = Bb-D-F-Ab-C = Bb9!
+  // No barre: D string is open so a continuous barre across strings 1-5 is not possible.
+  // Individual fingers on fret 1 around the open D string.
   'Bb9': {
     voicings: [{
       strings: [null, 1, 0, 1, 1, 1],
-      fingers: [null, 1, 0, 1, 1, 1],
-      barres: [{ fromString: 1, toString: 5, fret: 1 }],
+      fingers: [null, 1, 0, 2, 3, 4],
+      barres: [],
       baseFret: 1,
     }],
     difficulty: 'advanced',

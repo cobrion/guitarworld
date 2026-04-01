@@ -44,7 +44,7 @@ function intervalToScaleDegree(label: string): number {
 
 /** Qualities that are built from the minor scale */
 const MINOR_FAMILY_QUALITIES = new Set<ChordQuality>([
-  'minor', 'minor7', 'minor7b5', 'diminished', 'diminished7', 'minor9', 'minor11', 'minor6',
+  'minor', 'minor7', 'minor7b5', 'diminished', 'diminished7', 'minor9', 'minor11', 'minor6', 'minoradd9',
 ]);
 
 /** Visual scale-degree builder showing how chord tones are picked from the scale */

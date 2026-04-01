@@ -18,6 +18,7 @@ const BORDER_COLORS: Partial<Record<ChordQuality, string>> = {
   sus2: 'var(--chord-sus-border)',
   sus4: 'var(--chord-sus-border)',
   add9: 'var(--color-accent)',
+  minoradd9: 'var(--chord-minor-border)',
   dominant9: 'var(--color-accent)',
   power: 'var(--color-secondary)',
 };
@@ -35,6 +36,7 @@ const BG_COLORS: Partial<Record<ChordQuality, string>> = {
   sus2: 'var(--chord-sus-bg)',
   sus4: 'var(--chord-sus-bg)',
   add9: 'var(--chord-sus-bg)',
+  minoradd9: 'var(--chord-minor-bg)',
   dominant9: 'var(--chord-sus-bg)',
   power: 'var(--chord-major-bg)',
 };

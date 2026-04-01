@@ -12,7 +12,7 @@ export type ScaleType = 'major' | 'minor';
 export type ChordQuality =
   | 'major' | 'minor' | 'diminished' | 'augmented'
   | 'dominant7' | 'major7' | 'minor7' | 'minor7b5'
-  | 'diminished7' | 'sus2' | 'sus4' | 'add9'
+  | 'diminished7' | 'sus2' | 'sus4' | 'add9' | 'minoradd9'
   | 'dominant9' | 'power'
   | 'minor9' | 'major9' | 'dominant11' | 'minor11' | 'dominant13'
   | 'dom7sharp9' | 'dom7flat9' | 'aug7' | 'major6' | 'minor6';

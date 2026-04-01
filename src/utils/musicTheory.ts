@@ -82,6 +82,7 @@ export function qualitySuffix(quality: ChordQuality): string {
     case 'sus2': return 'sus2';
     case 'sus4': return 'sus4';
     case 'add9': return 'add9';
+    case 'minoradd9': return 'madd9';
     case 'dominant9': return '9';
     case 'power': return '5';
     case 'minor9': return 'm9';
@@ -144,7 +145,7 @@ const EXTRA_SUFFIXES: { suffix: string; quality: ChordQuality; romanTag: string 
   { suffix: 'aug', quality: 'augmented', romanTag: 'aug' },
   { suffix: 'dim7', quality: 'diminished7', romanTag: 'dim7' },
   { suffix: '9', quality: 'dominant9', romanTag: '9' },
-  { suffix: 'madd9', quality: 'add9', romanTag: 'madd9' },
+  { suffix: 'madd9', quality: 'minoradd9', romanTag: 'madd9' },
 ];
 
 /**

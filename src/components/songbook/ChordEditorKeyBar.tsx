@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { Key, ScaleType, ChordData } from '@/types';
+import type { Key, ScaleType } from '@/types';
 import { ALL_KEYS } from '@/utils/constants';
 import { getChordsForKey } from '@/utils/musicTheory';
 import { getHarmonicFunctionColor, analyzeChordInKey } from '@/utils/harmonicAnalysis';

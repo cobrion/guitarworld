@@ -51,7 +51,7 @@ export async function decodeSongs(encoded: string): Promise<Song[]> {
     const compressed = base64UrlToArrayBuffer(encoded.slice(2));
     const ds = new DecompressionStream('deflate');
     const writer = ds.writable.getWriter();
-    writer.write(compressed);
+    writer.write(new Uint8Array(compressed));
     writer.close();
 
     const chunks: Uint8Array[] = [];

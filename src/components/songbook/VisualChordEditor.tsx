@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import type { Key, ScaleType, SongSection, EditorWord } from '@/types';
+import type { Key, ScaleType, SongSection } from '@/types';
 import {
   parseChordProText,
   chordProLineToWords,
