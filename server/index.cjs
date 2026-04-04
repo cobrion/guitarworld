@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const { MongoClient, ObjectId } = require('mongodb');
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://10.5.109.14:27017';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://appuser:shawshank-app-2026@10.5.109.1:27017';
 const DB_NAME = 'guitarworld';
 const PORT = process.env.API_PORT || 3001;
 
