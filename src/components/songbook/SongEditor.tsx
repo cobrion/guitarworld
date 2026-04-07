@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback } from 'react';
 import type { Song, Key } from '@/types';
 import { ALL_KEYS, generateUUID } from '@/utils/constants';
 import { parseChordProText, sectionsToChordPro, parseChordProLine } from '@/utils/chordpro';
+import { fetchChords } from '@/utils/chordFetch';
 import LyricsSearchDialog, { type LyricsSearchSelection } from './LyricsSearchDialog';
 import VisualChordEditor from './VisualChordEditor';
 
@@ -36,6 +37,8 @@ export default function SongEditor({ song, initialData, onSave, onCancel }: Song
   });
 
   const [showLyricsSearch, setShowLyricsSearch] = useState(false);
+  const [fetchingChords, setFetchingChords] = useState(false);
+  const [chordFetchError, setChordFetchError] = useState<string | null>(null);
   const [editorMode, setEditorMode] = useState<'visual' | 'chordpro'>('visual');
   const [activePanel, setActivePanel] = useState<'metadata' | 'lyrics'>(
     initialData?.chordProText ? 'lyrics' : 'metadata'
@@ -89,6 +92,27 @@ export default function SongEditor({ song, initialData, onSave, onCancel }: Song
     setShowLyricsSearch(false);
     setActivePanel('lyrics');
   }, []);
+
+  const handleFetchChords = useCallback(async () => {
+    if (!title.trim() || !artist.trim()) {
+      setChordFetchError('Enter a title and artist first');
+      return;
+    }
+    setFetchingChords(true);
+    setChordFetchError(null);
+    try {
+      const result = await fetchChords(artist, title);
+      setChordProText(result.chordProText);
+      if (result.key) {
+        const matchedKey = ALL_KEYS.find(k => k === result.key);
+        if (matchedKey) setKey(matchedKey);
+      }
+    } catch (err) {
+      setChordFetchError(err instanceof Error ? err.message : 'Failed to fetch chords');
+    } finally {
+      setFetchingChords(false);
+    }
+  }, [title, artist]);
 
   const canSave = title.trim() && artist.trim();
 
@@ -312,6 +336,22 @@ export default function SongEditor({ song, initialData, onSave, onCancel }: Song
                 Search Web
               </button>
 
+              {/* Fetch Chords button (both modes) */}
+              <button
+                onClick={handleFetchChords}
+                disabled={fetchingChords}
+                className="px-2 py-1 rounded text-[11px] font-semibold cursor-pointer flex-shrink-0"
+                style={{
+                  backgroundColor: fetchingChords ? 'var(--color-border)' : '#2563eb',
+                  color: '#fff',
+                  border: 'none',
+                  opacity: fetchingChords ? 0.7 : 1,
+                }}
+                title="Fetch chords from Ultimate Guitar"
+              >
+                {fetchingChords ? 'Fetching...' : 'Fetch Chords'}
+              </button>
+
               <div className="flex-1" />
 
               {editorMode === 'visual' && (
@@ -323,6 +363,27 @@ export default function SongEditor({ song, initialData, onSave, onCancel }: Song
                 </span>
               )}
             </div>
+
+            {/* Chord fetch error banner */}
+            {chordFetchError && (
+              <div
+                className="flex items-center gap-2 px-3 py-1.5 text-[11px] flex-shrink-0"
+                style={{
+                  backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                  color: '#ef4444',
+                  borderBottom: '1px solid rgba(239, 68, 68, 0.3)',
+                }}
+              >
+                <span className="flex-1">{chordFetchError}</span>
+                <button
+                  onClick={() => setChordFetchError(null)}
+                  className="cursor-pointer font-bold"
+                  style={{ background: 'none', border: 'none', color: '#ef4444' }}
+                >
+                  &#x2715;
+                </button>
+              </div>
+            )}
 
             {/* Visual mode */}
             {editorMode === 'visual' && (
