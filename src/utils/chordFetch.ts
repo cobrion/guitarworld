@@ -1,6 +1,6 @@
 /**
  * Fetch chord charts from the internet via the backend proxy.
- * Searches Ultimate Guitar for the best matching chord tab,
+ * Searches Cifraclub for a matching chord page,
  * parses it, and returns ChordPro-formatted text.
  */
 
@@ -10,8 +10,6 @@ export interface ChordFetchResult {
   chordProText: string;
   source: string;
   key: string | null;
-  rating: number;
-  votes: number;
 }
 
 /**

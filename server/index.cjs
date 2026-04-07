@@ -136,24 +136,88 @@ app.put('/api/preferences/:key', async (req, res) => {
   }
 });
 
-// ──────────── CHORD SEARCH (Ultimate Guitar proxy) ────────────
+// ──────────── CHORD SEARCH (Cifraclub proxy) ────────────
+
+const FETCH_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  'Accept-Language': 'en-US,en;q=0.9',
+};
 
 /**
- * Extract chord positions from a UG chord line containing [ch]...[/ch] tags.
- * Returns an array of { chord, position } where position is the display column.
+ * Slugify a string for Cifraclub URL format.
+ * "Bruce Springsteen" → "bruce-springsteen"
+ */
+function slugify(str) {
+  return str.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // strip accents
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+/**
+ * Extract chord content from Cifraclub HTML.
+ * Cifraclub wraps chords in <b> tags inside a <pre class="cifra_cnt ..."> element.
+ * Returns plain text with chords in [Chord] notation and section headers preserved.
+ */
+function extractCifraContent(html) {
+  // Find the <pre class="cifra_cnt ...">...</pre> block
+  const preMatch = html.match(/<pre[^>]*class="cifra_cnt[^"]*"[^>]*>([\s\S]*?)<\/pre>/);
+  if (!preMatch) return null;
+
+  let content = preMatch[1];
+
+  // Convert <b>Chord</b> → [Chord] (Cifraclub wraps chords in bold tags)
+  content = content.replace(/<b>([^<]+)<\/b>/g, '[$1]');
+
+  // Remove any remaining HTML tags
+  content = content.replace(/<[^>]+>/g, '');
+
+  // Decode HTML entities
+  content = content
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;/g, "'")
+    .replace(/&apos;/g, "'");
+
+  return content;
+}
+
+/**
+ * Detect the key from Cifraclub's page content.
+ * Cifraclub includes "tom: Bb" or similar near the top of the cifra content.
+ */
+function extractKeyFromCifra(content) {
+  const keyMatch = content.match(/^\s*tom:\s*([A-G][b#]?m?)\s*$/m);
+  return keyMatch ? keyMatch[1] : null;
+}
+
+/**
+ * Check if a line is a chord-only line (contains [Chord] markers but no/minimal lyrics).
+ * A chord line has chord markers and the text between them is mostly whitespace.
+ */
+function isChordLine(line) {
+  if (!/\[/.test(line)) return false;
+  const withoutChords = line.replace(/\[[^\]]+\]/g, '');
+  return withoutChords.trim().length === 0;
+}
+
+/**
+ * Extract chord positions from a chord line with [Chord] markers.
+ * Returns array of { chord, position } where position is display column.
  */
 function extractChordPositions(line) {
   const positions = [];
-  const chordRegex = /\[ch\](.*?)\[\/ch\]/g;
+  const chordRegex = /\[([^\]]+)\]/g;
   let displayPos = 0;
   let lastEnd = 0;
   let match;
 
   while ((match = chordRegex.exec(line)) !== null) {
-    // Characters between last tag end and this tag start are display chars (spaces)
     const between = line.slice(lastEnd, match.index);
     displayPos += between.length;
-
     positions.push({ chord: match[1], position: displayPos });
     displayPos += match[1].length;
     lastEnd = match.index + match[0].length;
@@ -163,41 +227,49 @@ function extractChordPositions(line) {
 }
 
 /**
- * Check if a line is a chord line (contains [ch] tags).
- */
-function isChordLine(line) {
-  return /\[ch\]/.test(line);
-}
-
-/**
- * Merge a chord-position array into a lyrics line, producing a ChordPro line.
+ * Merge chord positions into a lyrics line, producing a ChordPro line.
+ * Adjusts for leading whitespace differences between chord and lyrics lines
+ * (Cifraclub often adds extra leading whitespace to chord lines for centering).
  */
 function mergeChordsIntoLyrics(chordPositions, lyricsLine) {
   if (!lyricsLine || lyricsLine.trim() === '') {
-    // Chord-only line (no lyrics below)
     return chordPositions.map(cp => `[${cp.chord}]`).join(' ');
   }
 
-  // Sort by position descending so insertions don't shift indices
-  const sorted = [...chordPositions].sort((a, b) => b.position - a.position);
+  // Calculate leading whitespace offset: chord lines often have extra indentation
+  const lyricsIndent = lyricsLine.match(/^(\s*)/)[0].length;
+  const firstChordPos = chordPositions.length > 0
+    ? Math.min(...chordPositions.map(cp => cp.position))
+    : 0;
+  const offset = Math.max(0, firstChordPos - lyricsIndent);
+
+  // Adjust positions and sort descending so insertions don't shift indices
+  const adjusted = chordPositions
+    .map(cp => ({ chord: cp.chord, position: Math.max(0, cp.position - offset) }))
+    .sort((a, b) => b.position - a.position);
 
   let result = lyricsLine;
-  for (const cp of sorted) {
+  for (const cp of adjusted) {
     const insertPos = Math.min(cp.position, result.length);
     result = result.slice(0, insertPos) + `[${cp.chord}]` + result.slice(insertPos);
   }
-
   return result;
 }
 
 /**
- * Parse Ultimate Guitar tab content into ChordPro format.
+ * Check if a line looks like guitar tablature (e.g., E|---5---8---|)
  */
-function parseUGContentToChordPro(content, title, artist) {
-  // Remove [tab] and [/tab] wrapper tags
-  let text = content.replace(/\[tab\]/g, '').replace(/\[\/tab\]/g, '');
+function isTabLine(line) {
+  return /^[EBGDAe]\|[-0-9hp\/\\~()|x\s]+\|?\s*$/.test(line.trim());
+}
 
-  const lines = text.split(/\r?\n/);
+/**
+ * Convert Cifraclub extracted content into ChordPro format.
+ * Cifraclub uses "chords above lyrics" positional format with [Chord] markers
+ * and [Section] headers in square brackets on their own line.
+ */
+function cifraToChordPro(content, title, artist) {
+  const lines = content.split('\n');
   const chordProLines = [];
 
   chordProLines.push(`{title: ${title}}`);
@@ -205,11 +277,22 @@ function parseUGContentToChordPro(content, title, artist) {
   chordProLines.push('');
 
   let i = 0;
+  // Skip leading metadata (tom: Bb, etc.)
+  while (i < lines.length && (lines[i].trim() === '' || /^\s*tom:/i.test(lines[i]))) {
+    i++;
+  }
+
   while (i < lines.length) {
     const line = lines[i];
 
-    // Section header: [Verse 1], [Chorus], etc. (not containing [ch])
-    const sectionMatch = line.match(/^\[([^\]]+)\]\s*$/);
+    // Skip tab lines (guitar tablature notation)
+    if (isTabLine(line)) {
+      i++;
+      continue;
+    }
+
+    // Section header: [Verse], [Chorus], [Bridge], [Solo], etc.
+    const sectionMatch = line.match(/^\[([A-Za-z][^\]]*)\]\s*$/);
     if (sectionMatch && !isChordLine(line)) {
       chordProLines.push('');
       chordProLines.push(`{section: ${sectionMatch[1]}}`);
@@ -217,21 +300,21 @@ function parseUGContentToChordPro(content, title, artist) {
       continue;
     }
 
-    // Chord line
+    // Chord line (contains [Chord] markers with only whitespace between)
     if (isChordLine(line)) {
       const chordPositions = extractChordPositions(line);
 
-      // Look ahead for a lyrics line
+      // Look ahead for a lyrics line to merge into
       const nextLine = i + 1 < lines.length ? lines[i + 1] : '';
-      const nextIsSectionOrChord = nextLine.match(/^\[([^\]]+)\]\s*$/) || isChordLine(nextLine);
       const nextIsBlank = nextLine.trim() === '';
+      const nextIsChordLine = isChordLine(nextLine);
+      const nextIsSection = /^\[([A-Za-z][^\]]*)\]\s*$/.test(nextLine);
+      const nextIsTab = isTabLine(nextLine);
 
-      if (!nextIsSectionOrChord && !nextIsBlank && i + 1 < lines.length) {
-        // Merge chords into the next lyrics line
+      if (!nextIsBlank && !nextIsChordLine && !nextIsSection && !nextIsTab && i + 1 < lines.length) {
         chordProLines.push(mergeChordsIntoLyrics(chordPositions, nextLine));
         i += 2;
       } else {
-        // Chord-only line
         chordProLines.push(mergeChordsIntoLyrics(chordPositions, ''));
         i++;
       }
@@ -245,35 +328,17 @@ function parseUGContentToChordPro(content, title, artist) {
       continue;
     }
 
-    // Plain lyrics line (no chords)
+    // Plain lyrics line (no chords above it — already consumed by chord merge)
     chordProLines.push(line);
     i++;
   }
 
-  // Clean up excessive blank lines
   return chordProLines.join('\n')
     .replace(/\n{3,}/g, '\n\n')
     .trimEnd();
 }
 
-// Decode HTML entities in UG's data-content attribute
-function decodeHTMLEntities(str) {
-  return str
-    .replace(/&quot;/g, '"')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&#039;/g, "'")
-    .replace(/&apos;/g, "'");
-}
-
-const UG_HEADERS = {
-  'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-  'Accept-Language': 'en-US,en;q=0.9',
-};
-
-// GET /api/chords/search — search for chords and return ChordPro text
+// GET /api/chords/search — search for chords via Cifraclub and return ChordPro text
 app.get('/api/chords/search', async (req, res) => {
   try {
     const { artist, title } = req.query;
@@ -281,88 +346,40 @@ app.get('/api/chords/search', async (req, res) => {
       return res.status(400).json({ error: 'artist and title query params are required' });
     }
 
-    const query = `${artist} ${title}`;
-    const searchUrl = `https://www.ultimate-guitar.com/search.php?search_type=title&value=${encodeURIComponent(query)}&type[]=300`;
+    // Build Cifraclub URL: https://www.cifraclub.com.br/{artist-slug}/{title-slug}/
+    const artistSlug = slugify(artist.trim());
+    const titleSlug = slugify(title.trim());
+    const cifraUrl = `https://www.cifraclub.com.br/${artistSlug}/${titleSlug}/`;
 
-    // 1. Fetch search results
-    const searchResponse = await fetch(searchUrl, { headers: UG_HEADERS });
-    if (!searchResponse.ok) {
-      console.error('UG search failed:', searchResponse.status, searchResponse.statusText);
-      return res.status(502).json({ error: 'Failed to search for chords' });
+    console.log(`Fetching chords from: ${cifraUrl}`);
+
+    const response = await fetch(cifraUrl, { headers: FETCH_HEADERS });
+    if (!response.ok) {
+      if (response.status === 404) {
+        return res.status(404).json({ error: `No chords found for "${title}" by "${artist}" on Cifraclub` });
+      }
+      console.error('Cifraclub fetch failed:', response.status, response.statusText);
+      return res.status(502).json({ error: 'Failed to fetch chords from Cifraclub' });
     }
 
-    const searchHtml = await searchResponse.text();
+    const html = await response.text();
 
-    // 2. Extract JSON data store from the HTML
-    const storeMatch = searchHtml.match(/class="js-store"\s+data-content="([^"]+)"/);
-    if (!storeMatch) {
-      return res.status(404).json({ error: 'No chord results found. The search returned no data.' });
-    }
-
-    let storeData;
-    try {
-      storeData = JSON.parse(decodeHTMLEntities(storeMatch[1]));
-    } catch (e) {
-      console.error('Failed to parse UG search JSON:', e.message);
-      return res.status(502).json({ error: 'Failed to parse search results' });
-    }
-
-    // 3. Find chord tabs in results
-    const results = storeData?.store?.page?.data?.results;
-    if (!results || !Array.isArray(results)) {
-      return res.status(404).json({ error: 'No results found for this song' });
-    }
-
-    const chordResults = results.filter(r => r.type === 'Chords' && r.tab_url);
-    if (chordResults.length === 0) {
-      return res.status(404).json({ error: 'No chord tabs found for this song' });
-    }
-
-    // Sort by rating (best first)
-    chordResults.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-    const bestResult = chordResults[0];
-
-    // 4. Fetch the tab page
-    const tabResponse = await fetch(bestResult.tab_url, { headers: UG_HEADERS });
-    if (!tabResponse.ok) {
-      console.error('UG tab fetch failed:', tabResponse.status);
-      return res.status(502).json({ error: 'Failed to fetch the chord tab page' });
-    }
-
-    const tabHtml = await tabResponse.text();
-
-    // 5. Extract tab content
-    const tabStoreMatch = tabHtml.match(/class="js-store"\s+data-content="([^"]+)"/);
-    if (!tabStoreMatch) {
-      return res.status(502).json({ error: 'Failed to parse chord tab page' });
-    }
-
-    let tabData;
-    try {
-      tabData = JSON.parse(decodeHTMLEntities(tabStoreMatch[1]));
-    } catch (e) {
-      console.error('Failed to parse UG tab JSON:', e.message);
-      return res.status(502).json({ error: 'Failed to parse chord tab data' });
-    }
-
-    const content = tabData?.store?.page?.data?.tab_view?.wiki_tab?.content;
+    // Extract chord content from the page
+    const content = extractCifraContent(html);
     if (!content) {
-      return res.status(404).json({ error: 'No chord content found in the tab' });
+      return res.status(404).json({ error: 'No chord content found on the page' });
     }
 
-    // 6. Convert to ChordPro
-    const chordProText = parseUGContentToChordPro(content, title.trim(), artist.trim());
+    // Detect key
+    const detectedKey = extractKeyFromCifra(content);
 
-    // 7. Try to extract key from tab metadata
-    const tabMeta = tabData?.store?.page?.data?.tab_view?.meta;
-    const detectedKey = tabMeta?.tonality || null;
+    // Convert to ChordPro
+    const chordProText = cifraToChordPro(content, title.trim(), artist.trim());
 
     res.json({
       chordProText,
-      source: bestResult.tab_url,
+      source: cifraUrl,
       key: detectedKey,
-      rating: bestResult.rating,
-      votes: bestResult.votes,
     });
   } catch (err) {
     console.error('GET /api/chords/search error:', err);
