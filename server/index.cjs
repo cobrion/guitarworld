@@ -368,9 +368,18 @@ app.get('/api/chords/search', async (req, res) => {
       return res.status(400).json({ error: 'artist and title query params are required' });
     }
 
+    // Clean the title: strip artist prefix if present (e.g. "Bruce Springsteen - The Rising" → "The Rising")
+    let cleanTitle = title.trim();
+    const artistLower = artist.trim().toLowerCase();
+    const titleLower = cleanTitle.toLowerCase();
+    if (titleLower.startsWith(artistLower)) {
+      cleanTitle = cleanTitle.slice(artist.trim().length).replace(/^\s*[-–—:]\s*/, '').trim();
+    }
+    if (!cleanTitle) cleanTitle = title.trim(); // fallback if stripping emptied it
+
     // Build Cifraclub URL: https://www.cifraclub.com.br/{artist-slug}/{title-slug}/
     const artistSlug = slugify(artist.trim());
-    const titleSlug = slugify(title.trim());
+    const titleSlug = slugify(cleanTitle);
     const cifraUrl = `https://www.cifraclub.com.br/${artistSlug}/${titleSlug}/`;
 
     console.log(`Fetching chords from: ${cifraUrl}`);
