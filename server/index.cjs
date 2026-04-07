@@ -161,8 +161,8 @@ function slugify(str) {
  * Returns plain text with chords in [Chord] notation and section headers preserved.
  */
 function extractCifraContent(html) {
-  // Find the <pre class="cifra_cnt ...">...</pre> block
-  const preMatch = html.match(/<pre[^>]*class="cifra_cnt[^"]*"[^>]*>([\s\S]*?)<\/pre>/);
+  // Find the <pre> block containing chords (may or may not have class="cifra_cnt")
+  const preMatch = html.match(/<pre[^>]*>([\s\S]*?)<\/pre>/);
   if (!preMatch) return null;
 
   let content = preMatch[1];
