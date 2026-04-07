@@ -195,11 +195,33 @@ function extractKeyFromCifra(content) {
 }
 
 /**
+ * Known section header names used by chord sites.
+ */
+const SECTION_NAMES = new Set([
+  'intro', 'verse', 'pre-chorus', 'prechorus', 'chorus', 'bridge',
+  'solo', 'outro', 'interlude', 'instrumental', 'break', 'coda',
+  'refrain', 'hook', 'riff', 'ending', 'tag',
+]);
+
+/**
+ * Check if a bracket content looks like a section header (not a chord).
+ * Matches "Chorus", "Verse 1", "Bridge 2", "Solo", etc.
+ */
+function isSectionName(text) {
+  const base = text.replace(/\s*\d+\s*$/, '').toLowerCase().trim();
+  return SECTION_NAMES.has(base);
+}
+
+/**
  * Check if a line is a chord-only line (contains [Chord] markers but no/minimal lyrics).
  * A chord line has chord markers and the text between them is mostly whitespace.
+ * Lines that are section headers (e.g. [Chorus]) are NOT chord lines.
  */
 function isChordLine(line) {
   if (!/\[/.test(line)) return false;
+  // If the line is a single bracket with a section name, it's not a chord line
+  const singleBracket = line.match(/^\s*\[([^\]]+)\]\s*$/);
+  if (singleBracket && isSectionName(singleBracket[1])) return false;
   const withoutChords = line.replace(/\[[^\]]+\]/g, '');
   return withoutChords.trim().length === 0;
 }
@@ -292,8 +314,8 @@ function cifraToChordPro(content, title, artist) {
     }
 
     // Section header: [Verse], [Chorus], [Bridge], [Solo], etc.
-    const sectionMatch = line.match(/^\[([A-Za-z][^\]]*)\]\s*$/);
-    if (sectionMatch && !isChordLine(line)) {
+    const sectionMatch = line.match(/^\s*\[([A-Za-z][^\]]*)\]\s*$/);
+    if (sectionMatch && isSectionName(sectionMatch[1])) {
       chordProLines.push('');
       chordProLines.push(`{section: ${sectionMatch[1]}}`);
       i++;
