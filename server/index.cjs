@@ -360,6 +360,45 @@ function cifraToChordPro(content, title, artist) {
     .trimEnd();
 }
 
+/**
+ * Try to fetch chord content from a Cifraclub URL.
+ * Returns { content, html } or null if no chord content found.
+ */
+async function fetchCifraPage(url) {
+  const response = await fetch(url, { headers: FETCH_HEADERS });
+  if (!response.ok) return null;
+  const html = await response.text();
+  const content = extractCifraContent(html);
+  return content ? { content, url } : null;
+}
+
+/**
+ * Search Cifraclub's Solr API for a song and return the best match URL.
+ * Returns { artistSlug, titleSlug } or null.
+ */
+async function searchCifraclub(query) {
+  const searchUrl = `https://solr.sscdn.co/cc/songs/?q=${encodeURIComponent(query)}&rows=5`;
+  const response = await fetch(searchUrl, { headers: FETCH_HEADERS });
+  if (!response.ok) return null;
+
+  const text = await response.text();
+  // Response is JSONP: suggest_callback({...})
+  const jsonMatch = text.match(/suggest_callback\(([\s\S]+)\)\s*$/);
+  if (!jsonMatch) return null;
+
+  const data = JSON.parse(jsonMatch[1]);
+  const docs = data?.response?.docs;
+  if (!docs || docs.length === 0) return null;
+
+  // Return the first result's slugs
+  return {
+    artistSlug: docs[0].dns,
+    titleSlug: docs[0].url,
+    artistName: docs[0].art,
+    songTitle: docs[0].txt,
+  };
+}
+
 // GET /api/chords/search — search for chords via Cifraclub and return ChordPro text
 app.get('/api/chords/search', async (req, res) => {
   try {
@@ -375,41 +414,53 @@ app.get('/api/chords/search', async (req, res) => {
     if (titleLower.startsWith(artistLower)) {
       cleanTitle = cleanTitle.slice(artist.trim().length).replace(/^\s*[-–—:]\s*/, '').trim();
     }
-    if (!cleanTitle) cleanTitle = title.trim(); // fallback if stripping emptied it
+    if (!cleanTitle) cleanTitle = title.trim();
 
-    // Build Cifraclub URL: https://www.cifraclub.com.br/{artist-slug}/{title-slug}/
+    // Strategy 1: Try direct URL from artist + title slugs
     const artistSlug = slugify(artist.trim());
     const titleSlug = slugify(cleanTitle);
-    const cifraUrl = `https://www.cifraclub.com.br/${artistSlug}/${titleSlug}/`;
+    const directUrl = `https://www.cifraclub.com.br/${artistSlug}/${titleSlug}/`;
 
-    console.log(`Fetching chords from: ${cifraUrl}`);
+    console.log(`Trying direct URL: ${directUrl}`);
+    let result = await fetchCifraPage(directUrl);
 
-    const response = await fetch(cifraUrl, { headers: FETCH_HEADERS });
-    if (!response.ok) {
-      if (response.status === 404) {
-        return res.status(404).json({ error: `No chords found for "${title}" by "${artist}" on Cifraclub` });
+    // Strategy 2: Search Cifraclub's Solr API if direct URL failed
+    if (!result) {
+      console.log(`Direct URL failed, searching Cifraclub for: ${cleanTitle} ${artist.trim()}`);
+      const searchResult = await searchCifraclub(`${cleanTitle} ${artist.trim()}`);
+
+      if (searchResult) {
+        const searchUrl = `https://www.cifraclub.com.br/${searchResult.artistSlug}/${searchResult.titleSlug}/`;
+        console.log(`Search found: ${searchUrl} (${searchResult.artistName} - ${searchResult.songTitle})`);
+        result = await fetchCifraPage(searchUrl);
       }
-      console.error('Cifraclub fetch failed:', response.status, response.statusText);
-      return res.status(502).json({ error: 'Failed to fetch chords from Cifraclub' });
     }
 
-    const html = await response.text();
+    // Strategy 3: Search by title only (for "Various" or mismatched artist names)
+    if (!result) {
+      console.log(`Artist search failed, searching by title only: ${cleanTitle}`);
+      const titleSearch = await searchCifraclub(cleanTitle);
 
-    // Extract chord content from the page
-    const content = extractCifraContent(html);
-    if (!content) {
-      return res.status(404).json({ error: 'No chord content found on the page' });
+      if (titleSearch) {
+        const titleUrl = `https://www.cifraclub.com.br/${titleSearch.artistSlug}/${titleSearch.titleSlug}/`;
+        console.log(`Title search found: ${titleUrl} (${titleSearch.artistName} - ${titleSearch.songTitle})`);
+        result = await fetchCifraPage(titleUrl);
+      }
+    }
+
+    if (!result) {
+      return res.status(404).json({ error: `No chords found for "${cleanTitle}" by "${artist.trim()}"` });
     }
 
     // Detect key
-    const detectedKey = extractKeyFromCifra(content);
+    const detectedKey = extractKeyFromCifra(result.content);
 
     // Convert to ChordPro
-    const chordProText = cifraToChordPro(content, title.trim(), artist.trim());
+    const chordProText = cifraToChordPro(result.content, title.trim(), artist.trim());
 
     res.json({
       chordProText,
-      source: cifraUrl,
+      source: result.url,
       key: detectedKey,
     });
   } catch (err) {
