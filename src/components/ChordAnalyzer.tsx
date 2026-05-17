@@ -1,13 +1,11 @@
 import { useState, useMemo } from 'react';
-import type { NoteName, ChordQuality, Orientation } from '@/types';
-import { TOTAL_FRETS, INTERVAL_COLORS } from '@/utils/constants';
+import type { NoteName, ChordQuality } from '@/types';
+import { INTERVAL_COLORS } from '@/utils/constants';
 import { qualitySuffix } from '@/utils/musicTheory';
 import {
-  getAllChordTones,
   getChordFormulaDisplay,
   getChordNotesDisplay,
   getQualityDisplayName,
-  getMovableBarrePositions,
   CHORD_FORMULAS,
 } from '@/utils/chordTones';
 import { noteToIndex, indexToNote, getScaleNotes } from '@/utils/musicTheory';
@@ -15,8 +13,6 @@ import { FLAT_KEYS, MAJOR_SCALE_INTERVALS, MINOR_SCALE_INTERVALS } from '@/utils
 import type { Key } from '@/types';
 import type { IntervalName } from '@/types';
 import ChordSelector from '@/components/ChordSelector';
-import OrientationToggle from '@/components/OrientationToggle';
-import GuitarNeck from '@/components/GuitarNeck';
 
 interface ChordToneInfo {
   noteName: string;
@@ -198,25 +194,9 @@ function IntervalBuilder({
   );
 }
 
-function useDefaultOrientation(): Orientation {
-  const [orientation] = useState<Orientation>(() =>
-    typeof window !== 'undefined' && window.innerWidth >= 640
-      ? 'horizontal'
-      : 'vertical',
-  );
-  return orientation;
-}
-
 export default function ChordAnalyzer() {
   const [selectedRoot, setSelectedRoot] = useState<NoteName>('C');
   const [selectedQuality, setSelectedQuality] = useState<ChordQuality>('major');
-  const defaultOrientation = useDefaultOrientation();
-  const [orientation, setOrientation] = useState<Orientation>(defaultOrientation);
-
-  const tones = useMemo(
-    () => getAllChordTones(selectedRoot, selectedQuality, TOTAL_FRETS),
-    [selectedRoot, selectedQuality],
-  );
 
   const legendIntervals: ChordToneInfo[] = useMemo(() => {
     const formula = CHORD_FORMULAS[selectedQuality];
@@ -241,11 +221,6 @@ export default function ChordAnalyzer() {
   const notesStr = getChordNotesDisplay(selectedRoot, selectedQuality);
   const chordName = `${selectedRoot}${qualitySuffix(selectedQuality)}`;
 
-  const neckBarres = useMemo(
-    () => getMovableBarrePositions(selectedRoot, selectedQuality, TOTAL_FRETS),
-    [selectedRoot, selectedQuality],
-  );
-
 
   return (
     <div className="px-4 py-6 sm:px-6">
@@ -267,10 +242,6 @@ export default function ChordAnalyzer() {
           onRootChange={setSelectedRoot}
           onQualityChange={setSelectedQuality}
         />
-        <OrientationToggle
-          orientation={orientation}
-          onToggle={() => setOrientation((o) => (o === 'vertical' ? 'horizontal' : 'vertical'))}
-        />
       </div>
 
       {/* Interval Builder — chromatic scale visualization */}
@@ -291,19 +262,6 @@ export default function ChordAnalyzer() {
           </span>
         </div>
         <IntervalBuilder root={selectedRoot} toneInfos={legendIntervals} quality={selectedQuality} />
-      </div>
-
-      {/* Guitar neck */}
-      <div
-        className="rounded-xl p-2 sm:p-3 mb-5"
-        style={{ backgroundColor: 'var(--neck-bg)', boxShadow: 'var(--shadow-md)' }}
-      >
-        <GuitarNeck
-          tones={tones}
-          orientation={orientation}
-          totalFrets={TOTAL_FRETS}
-          barres={neckBarres}
-        />
       </div>
 
 {/* Info panel */}
