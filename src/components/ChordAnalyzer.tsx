@@ -23,6 +23,294 @@ interface ChordToneInfo {
   chromaticIndex: number;
 }
 
+function intervalDegreeFamily(label: string): number {
+  const map: Record<string, number> = {
+    'R': 0, '2': 1, 'b9': 1, '9': 1, '#9': 1,
+    'b3': 2, '3': 2, '4': 3, '11': 3,
+    'b5': 4, '5': 4, '#5': 4,
+    'b6': 5, '6': 5, '13': 5,
+    'bb7': 6, 'b7': 6, '7': 6,
+  };
+  return map[label] ?? -1;
+}
+
+const DEGREE_FAMILY_LABELS = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th'];
+
+type SlotKind = 'kept' | 'altered' | 'removed' | 'added';
+
+interface TransformSlot {
+  degree: number;
+  kind: SlotKind;
+  majorLabel: string | null;
+  majorNote: string | null;
+  majorColor: string | null;
+  chordLabel: string | null;
+  chordNote: string | null;
+  chordColor: string | null;
+}
+
+function buildTransformSlots(
+  root: NoteName,
+  quality: ChordQuality,
+): TransformSlot[] {
+  const majorFormula = CHORD_FORMULAS['major'];
+  const chordFormula = CHORD_FORMULAS[quality];
+  const rootIdx = noteToIndex(root);
+  const preferFlats = FLAT_KEYS.has(root as Key);
+
+  const resolveNote = (semitones: number) =>
+    indexToNote((rootIdx + semitones) % 12, preferFlats);
+
+  const majorByDegree = new Map<number, { label: string; note: string; color: string }>();
+  for (const i of majorFormula) {
+    const deg = intervalDegreeFamily(i.label);
+    majorByDegree.set(deg, {
+      label: i.label,
+      note: resolveNote(i.semitones),
+      color: INTERVAL_COLORS[i.label as IntervalName],
+    });
+  }
+
+  const chordByDegree = new Map<number, { label: string; note: string; color: string }>();
+  for (const i of chordFormula) {
+    const deg = intervalDegreeFamily(i.label);
+    chordByDegree.set(deg, {
+      label: i.label,
+      note: resolveNote(i.semitones),
+      color: INTERVAL_COLORS[i.label as IntervalName],
+    });
+  }
+
+  const allDegrees = new Set([...majorByDegree.keys(), ...chordByDegree.keys()]);
+  const sorted = [...allDegrees].sort((a, b) => a - b);
+
+  return sorted.map((deg) => {
+    const maj = majorByDegree.get(deg);
+    const chd = chordByDegree.get(deg);
+
+    let kind: SlotKind;
+    if (maj && chd && maj.label === chd.label) kind = 'kept';
+    else if (maj && chd) kind = 'altered';
+    else if (maj && !chd) kind = 'removed';
+    else kind = 'added';
+
+    return {
+      degree: deg,
+      kind,
+      majorLabel: maj?.label ?? null,
+      majorNote: maj?.note ?? null,
+      majorColor: maj?.color ?? null,
+      chordLabel: chd?.label ?? null,
+      chordNote: chd?.note ?? null,
+      chordColor: chd?.color ?? null,
+    };
+  });
+}
+
+function ChordTransformation({
+  root,
+  quality,
+  chordName,
+}: {
+  root: NoteName;
+  quality: ChordQuality;
+  chordName: string;
+}) {
+  const slots = useMemo(() => buildTransformSlots(root, quality), [root, quality]);
+
+  if (quality === 'major') return null;
+
+  const majorLabel = `${root} Major`;
+
+  const labelW = 70;
+  const pillW = 64;
+  const pillH = 36;
+  const gap = 12;
+  const rowGap = 50;
+  const degreeLabelsH = 14;
+  const topY = degreeLabelsH;
+  const arrowZone = topY + pillH;
+  const bottomY = arrowZone + rowGap;
+  const pillsW = slots.length * pillW + (slots.length - 1) * gap;
+  const totalW = labelW + pillsW;
+  const totalH = bottomY + pillH + 4;
+
+  const kindSymbol = (kind: SlotKind) => {
+    switch (kind) {
+      case 'kept': return '=';
+      case 'altered': return '→';
+      case 'removed': return '×';
+      case 'added': return '+';
+    }
+  };
+
+  const kindColor = (kind: SlotKind) => {
+    switch (kind) {
+      case 'kept': return 'var(--color-success, #22c55e)';
+      case 'altered': return 'var(--color-warning, #f59e0b)';
+      case 'removed': return 'var(--color-error, #ef4444)';
+      case 'added': return 'var(--color-info, #3b82f6)';
+    }
+  };
+
+  return (
+    <div className="overflow-x-auto scrollbar-none" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <svg
+        viewBox={`0 0 ${totalW} ${totalH}`}
+        style={{ width: '100%', height: 'auto', minWidth: '320px', maxWidth: `${totalW}px`, display: 'block', margin: '0 auto' }}
+        role="img"
+        aria-label={`How ${chordName} is built from ${majorLabel}`}
+      >
+        {/* Row labels */}
+        <text
+          x={labelW - 8} y={topY + pillH / 2 + 4}
+          textAnchor="end"
+          fill="var(--color-text-muted)"
+          fontSize={10} fontWeight={600} fontFamily="Inter, sans-serif"
+        >
+          {majorLabel}
+        </text>
+        <text
+          x={labelW - 8} y={bottomY + pillH / 2 + 4}
+          textAnchor="end"
+          fill="var(--color-primary)"
+          fontSize={10} fontWeight={700} fontFamily="Inter, sans-serif"
+        >
+          {chordName}
+        </text>
+
+        {slots.map((slot, i) => {
+          const x = labelW + i * (pillW + gap);
+          const cx = x + pillW / 2;
+          const color = kindColor(slot.kind);
+
+          return (
+            <g key={slot.degree}>
+              {/* Degree family label */}
+              <text
+                x={cx} y={topY - 6}
+                textAnchor="middle"
+                fill="var(--color-text-muted)"
+                fontSize={8} fontFamily="Inter, sans-serif" fontWeight={500}
+              >
+                {DEGREE_FAMILY_LABELS[slot.degree]}
+              </text>
+
+              {/* Major row pill */}
+              {slot.majorLabel ? (
+                <g opacity={slot.kind === 'removed' ? 0.4 : slot.kind === 'kept' ? 0.5 : 0.5}>
+                  <rect
+                    x={x} y={topY}
+                    width={pillW} height={pillH}
+                    rx={8}
+                    fill={slot.majorColor!}
+                    opacity={0.8}
+                  />
+                  <text
+                    x={cx} y={topY + 14}
+                    textAnchor="middle"
+                    fill="var(--diagram-dot-text, #fff)"
+                    fontSize={9} fontWeight={700} fontFamily="Inter, sans-serif"
+                  >
+                    {slot.majorLabel}
+                  </text>
+                  <text
+                    x={cx} y={topY + 28}
+                    textAnchor="middle"
+                    fill="var(--diagram-dot-text, #fff)"
+                    fontSize={12} fontWeight={800} fontFamily="Inter, sans-serif"
+                  >
+                    {slot.majorNote}
+                  </text>
+                  {slot.kind === 'removed' && (
+                    <line
+                      x1={x + 4} y1={topY + pillH / 2}
+                      x2={x + pillW - 4} y2={topY + pillH / 2}
+                      stroke="var(--color-error, #ef4444)" strokeWidth={2}
+                    />
+                  )}
+                </g>
+              ) : (
+                <rect
+                  x={x} y={topY}
+                  width={pillW} height={pillH}
+                  rx={8}
+                  fill="none"
+                  stroke="var(--color-border)"
+                  strokeWidth={1}
+                  strokeDasharray="4 2"
+                  opacity={0.3}
+                />
+              )}
+
+              {/* Connection arrow / symbol */}
+              <text
+                x={cx} y={arrowZone + rowGap / 2 + 4}
+                textAnchor="middle"
+                fill={color}
+                fontSize={14} fontWeight={800} fontFamily="Inter, sans-serif"
+              >
+                {kindSymbol(slot.kind)}
+              </text>
+              {slot.kind === 'altered' && (
+                <text
+                  x={cx} y={arrowZone + rowGap / 2 + 18}
+                  textAnchor="middle"
+                  fill={color}
+                  fontSize={8} fontWeight={600} fontFamily="Inter, sans-serif"
+                >
+                  {slot.majorLabel}→{slot.chordLabel}
+                </text>
+              )}
+
+              {/* Chord row pill */}
+              {slot.chordLabel ? (
+                <g>
+                  <rect
+                    x={x} y={bottomY}
+                    width={pillW} height={pillH}
+                    rx={8}
+                    fill={slot.chordColor!}
+                    stroke={slot.kind === 'added' || slot.kind === 'altered' ? color : 'none'}
+                    strokeWidth={slot.kind === 'added' || slot.kind === 'altered' ? 2 : 0}
+                  />
+                  <text
+                    x={cx} y={bottomY + 14}
+                    textAnchor="middle"
+                    fill="var(--diagram-dot-text, #fff)"
+                    fontSize={9} fontWeight={700} fontFamily="Inter, sans-serif"
+                  >
+                    {slot.chordLabel}
+                  </text>
+                  <text
+                    x={cx} y={bottomY + 28}
+                    textAnchor="middle"
+                    fill="var(--diagram-dot-text, #fff)"
+                    fontSize={12} fontWeight={800} fontFamily="Inter, sans-serif"
+                  >
+                    {slot.chordNote}
+                  </text>
+                </g>
+              ) : (
+                <rect
+                  x={x} y={bottomY}
+                  width={pillW} height={pillH}
+                  rx={8}
+                  fill="none"
+                  stroke="var(--color-border)"
+                  strokeWidth={1}
+                  strokeDasharray="4 2"
+                  opacity={0.3}
+                />
+              )}
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
 const DEGREE_NAMES = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th'] as const;
 
 /**
@@ -264,7 +552,31 @@ export default function ChordAnalyzer() {
         <IntervalBuilder root={selectedRoot} toneInfos={legendIntervals} quality={selectedQuality} />
       </div>
 
-{/* Info panel */}
+      {/* Chord Transformation — how selected chord differs from major */}
+      {selectedQuality !== 'major' && (
+        <div
+          className="rounded-lg px-4 py-3 mb-5"
+          style={{
+            backgroundColor: 'var(--color-surface)',
+            border: '1px solid var(--color-border-subtle)',
+          }}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>
+              How <span style={{ color: 'var(--color-primary)' }}>{chordName}</span> is built from <span style={{ color: 'var(--color-text)' }}>{selectedRoot} Major</span>
+            </span>
+            <div className="flex gap-3 text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+              <span><span style={{ color: 'var(--color-success, #22c55e)' }}>■</span> kept</span>
+              <span><span style={{ color: 'var(--color-warning, #f59e0b)' }}>■</span> altered</span>
+              <span><span style={{ color: 'var(--color-info, #3b82f6)' }}>■</span> added</span>
+              <span><span style={{ color: 'var(--color-error, #ef4444)' }}>■</span> removed</span>
+            </div>
+          </div>
+          <ChordTransformation root={selectedRoot} quality={selectedQuality} chordName={chordName} />
+        </div>
+      )}
+
+      {/* Info panel */}
       <div
         className="rounded-lg px-4 py-3"
         style={{
