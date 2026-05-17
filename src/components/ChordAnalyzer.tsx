@@ -1,8 +1,7 @@
 import { useState, useMemo } from 'react';
 import type { NoteName, ChordQuality, Orientation } from '@/types';
 import { TOTAL_FRETS, INTERVAL_COLORS } from '@/utils/constants';
-import { qualitySuffix, lookupChord } from '@/utils/musicTheory';
-import ChordDiagram from '@/components/ChordDiagram';
+import { qualitySuffix } from '@/utils/musicTheory';
 import {
   getAllChordTones,
   getChordFormulaDisplay,
@@ -247,10 +246,6 @@ export default function ChordAnalyzer() {
     [selectedRoot, selectedQuality],
   );
 
-  const firstVoicing = useMemo(() => {
-    const data = lookupChord(chordName, selectedRoot);
-    return data?.voicings[0] ?? null;
-  }, [chordName, selectedRoot]);
 
   return (
     <div className="px-4 py-6 sm:px-6">
@@ -311,32 +306,7 @@ export default function ChordAnalyzer() {
         />
       </div>
 
-      {/* Basic voicing */}
-      <div
-        className="rounded-lg px-4 py-3 mb-5"
-        style={{
-          backgroundColor: 'var(--color-surface)',
-          border: '1px solid var(--color-border-subtle)',
-        }}
-      >
-        <span
-          className="text-xs font-medium block mb-2"
-          style={{ color: 'var(--color-text-muted)' }}
-        >
-          Basic Voicing
-        </span>
-        {firstVoicing ? (
-          <div style={{ width: 140 }}>
-            <ChordDiagram voicing={firstVoicing} chordName={chordName} />
-          </div>
-        ) : (
-          <p className="text-xs py-4" style={{ color: 'var(--color-text-muted)' }}>
-            No voicing available
-          </p>
-        )}
-      </div>
-
-      {/* Info panel */}
+{/* Info panel */}
       <div
         className="rounded-lg px-4 py-3"
         style={{
