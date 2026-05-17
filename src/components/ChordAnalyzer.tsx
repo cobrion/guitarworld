@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
 import type { NoteName, ChordQuality } from '@/types';
 import { INTERVAL_COLORS } from '@/utils/constants';
-import { qualitySuffix } from '@/utils/musicTheory';
+import { qualitySuffix, lookupChord } from '@/utils/musicTheory';
+import ChordDiagram from '@/components/ChordDiagram';
 import {
   getChordFormulaDisplay,
   getChordNotesDisplay,
@@ -508,7 +509,17 @@ export default function ChordAnalyzer() {
   const formulaStr = getChordFormulaDisplay(selectedQuality);
   const notesStr = getChordNotesDisplay(selectedRoot, selectedQuality);
   const chordName = `${selectedRoot}${qualitySuffix(selectedQuality)}`;
+  const majorChordName = `${selectedRoot}`;
 
+  const majorVoicing = useMemo(() => {
+    const data = lookupChord(majorChordName, selectedRoot);
+    return data?.voicings[0] ?? null;
+  }, [majorChordName, selectedRoot]);
+
+  const chordVoicing = useMemo(() => {
+    const data = lookupChord(chordName, selectedRoot);
+    return data?.voicings[0] ?? null;
+  }, [chordName, selectedRoot]);
 
   return (
     <div className="px-4 py-6 sm:px-6">
@@ -573,6 +584,41 @@ export default function ChordAnalyzer() {
             </div>
           </div>
           <ChordTransformation root={selectedRoot} quality={selectedQuality} chordName={chordName} />
+
+          {/* Side-by-side fingering diagrams */}
+          {(majorVoicing || chordVoicing) && (
+            <div className="mt-4 pt-3" style={{ borderTop: '1px solid var(--color-border-subtle)' }}>
+              <span className="text-xs font-medium block mb-3" style={{ color: 'var(--color-text-muted)' }}>
+                Fingering comparison
+              </span>
+              <div className="flex gap-8 justify-center flex-wrap">
+                <div className="text-center">
+                  <span className="text-[11px] font-semibold block mb-1" style={{ color: 'var(--color-text-muted)' }}>
+                    {majorChordName} Major
+                  </span>
+                  {majorVoicing ? (
+                    <div style={{ width: 120 }}>
+                      <ChordDiagram voicing={majorVoicing} chordName={majorChordName} />
+                    </div>
+                  ) : (
+                    <p className="text-xs py-4" style={{ color: 'var(--color-text-muted)' }}>No voicing</p>
+                  )}
+                </div>
+                <div className="text-center">
+                  <span className="text-[11px] font-semibold block mb-1" style={{ color: 'var(--color-primary)' }}>
+                    {chordName}
+                  </span>
+                  {chordVoicing ? (
+                    <div style={{ width: 120 }}>
+                      <ChordDiagram voicing={chordVoicing} chordName={chordName} />
+                    </div>
+                  ) : (
+                    <p className="text-xs py-4" style={{ color: 'var(--color-text-muted)' }}>No voicing</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
