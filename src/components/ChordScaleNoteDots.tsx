@@ -115,7 +115,16 @@ export default function ChordScaleNoteDots({
               x={cx} y={cy + 3.5}
               textAnchor="middle"
               fill={isOpen ? chordTone.color : 'var(--diagram-dot-text)'}
-              fontSize={9} fontWeight={800} fontFamily="Inter, sans-serif"
+              fontSize={10} fontWeight={800} fontFamily="Inter, sans-serif"
+              style={{ pointerEvents: 'none' }}
+            >
+              {chordTone.noteName}
+            </text>
+            <text
+              x={cx + r + 2} y={cy + r + 2}
+              textAnchor="start"
+              fill={chordTone.color}
+              fontSize={7} fontWeight={700} fontFamily="Inter, sans-serif"
               style={{ pointerEvents: 'none' }}
             >
               {intervalDisplay(chordTone.interval)}
@@ -166,7 +175,16 @@ export default function ChordScaleNoteDots({
               x={cx} y={cy + 3.5}
               textAnchor="middle"
               fill={isOpen ? tone.color : 'var(--diagram-dot-text)'}
-              fontSize={9} fontWeight={800} fontFamily="Inter, sans-serif"
+              fontSize={10} fontWeight={800} fontFamily="Inter, sans-serif"
+              style={{ pointerEvents: 'none' }}
+            >
+              {tone.noteName}
+            </text>
+            <text
+              x={cx + r + 2} y={cy + r + 2}
+              textAnchor="start"
+              fill={tone.color}
+              fontSize={7} fontWeight={700} fontFamily="Inter, sans-serif"
               style={{ pointerEvents: 'none' }}
             >
               {intervalDisplay(tone.interval)}
