@@ -487,6 +487,7 @@ function IntervalBuilder({
 export default function ChordAnalyzer() {
   const [selectedRoot, setSelectedRoot] = useState<NoteName>('C');
   const [selectedQuality, setSelectedQuality] = useState<ChordQuality>('major');
+  const [voicingIndex, setVoicingIndex] = useState(0);
 
   const legendIntervals: ChordToneInfo[] = useMemo(() => {
     const formula = CHORD_FORMULAS[selectedQuality];
@@ -517,10 +518,19 @@ export default function ChordAnalyzer() {
     return data?.voicings[0] ?? null;
   }, [majorChordName, selectedRoot]);
 
-  const chordVoicing = useMemo(() => {
+  const allChordVoicings = useMemo(() => {
     const data = lookupChord(chordName, selectedRoot);
-    return data?.voicings[0] ?? null;
+    return data?.voicings ?? [];
   }, [chordName, selectedRoot]);
+
+  const safeIndex = allChordVoicings.length > 0 ? voicingIndex % allChordVoicings.length : 0;
+  const chordVoicing = allChordVoicings[safeIndex] ?? null;
+  const totalVoicings = allChordVoicings.length;
+
+  const handleRootChange = (root: NoteName) => { setSelectedRoot(root); setVoicingIndex(0); };
+  const handleQualityChange = (quality: ChordQuality) => { setSelectedQuality(quality); setVoicingIndex(0); };
+  const prevVoicing = () => setVoicingIndex((i) => (i - 1 + totalVoicings) % totalVoicings);
+  const nextVoicing = () => setVoicingIndex((i) => (i + 1) % totalVoicings);
 
   return (
     <div className="px-4 py-6 sm:px-6">
@@ -539,8 +549,8 @@ export default function ChordAnalyzer() {
         <ChordSelector
           root={selectedRoot}
           quality={selectedQuality}
-          onRootChange={setSelectedRoot}
-          onQualityChange={setSelectedQuality}
+          onRootChange={handleRootChange}
+          onQualityChange={handleQualityChange}
         />
       </div>
 
@@ -586,7 +596,7 @@ export default function ChordAnalyzer() {
           </div>
           <ChordTransformation root={selectedRoot} quality={selectedQuality} chordName={chordName} />
 
-          {/* Side-by-side fingering diagrams */}
+          {/* Fingering diagrams with voicing navigation */}
           {(majorVoicing || chordVoicing) && (
             <div className="mt-4 pt-3" style={{ borderTop: '1px solid var(--color-border-subtle)' }}>
               <span className="text-xs font-medium block mb-3" style={{ color: 'var(--color-text-muted)' }}>
@@ -615,6 +625,27 @@ export default function ChordAnalyzer() {
                     </div>
                   ) : (
                     <p className="text-xs py-4" style={{ color: 'var(--color-text-muted)' }}>No voicing</p>
+                  )}
+                  {totalVoicings > 1 && (
+                    <div className="flex items-center justify-center gap-3 mt-2">
+                      <button
+                        onClick={prevVoicing}
+                        className="px-2 py-0.5 rounded text-xs font-bold"
+                        style={{ color: 'var(--color-primary)', background: 'var(--color-surface-raised)', border: '1px solid var(--color-border)' }}
+                      >
+                        &laquo;
+                      </button>
+                      <span className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                        {safeIndex + 1} / {totalVoicings}
+                      </span>
+                      <button
+                        onClick={nextVoicing}
+                        className="px-2 py-0.5 rounded text-xs font-bold"
+                        style={{ color: 'var(--color-primary)', background: 'var(--color-surface-raised)', border: '1px solid var(--color-border)' }}
+                      >
+                        &raquo;
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
