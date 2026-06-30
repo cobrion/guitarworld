@@ -1,12 +1,13 @@
 import { useState, useMemo } from 'react';
 import type { NoteName, ChordQuality } from '@/types';
 import { INTERVAL_COLORS } from '@/utils/constants';
-import { qualitySuffix, lookupChord } from '@/utils/musicTheory';
+import { qualitySuffix } from '@/utils/musicTheory';
 import ChordDiagram from '@/components/ChordDiagram';
 import {
   getChordFormulaDisplay,
   getChordNotesDisplay,
   getQualityDisplayName,
+  getAllVoicingsForChord,
   CHORD_FORMULAS,
 } from '@/utils/chordTones';
 import { noteToIndex, indexToNote, getScaleNotes } from '@/utils/musicTheory';
@@ -513,10 +514,10 @@ export default function ChordAnalyzer() {
   const chordName = `${selectedRoot}${qualitySuffix(selectedQuality)}`;
 
 
-  const allChordVoicings = useMemo(() => {
-    const data = lookupChord(chordName, selectedRoot);
-    return data?.voicings ?? [];
-  }, [chordName, selectedRoot]);
+  const allChordVoicings = useMemo(
+    () => getAllVoicingsForChord(selectedRoot, selectedQuality),
+    [selectedRoot, selectedQuality],
+  );
 
   const safeIndex = allChordVoicings.length > 0 ? voicingIndex % allChordVoicings.length : 0;
   const chordVoicing = allChordVoicings[safeIndex] ?? null;
@@ -618,8 +619,11 @@ export default function ChordAnalyzer() {
                 >
                   &laquo;
                 </button>
-                <span className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                <span className="text-[10px] text-center" style={{ color: 'var(--color-text-muted)' }}>
                   {safeIndex + 1} / {totalVoicings}
+                  <span className="block" style={{ color: 'var(--color-text-muted)', opacity: 0.7 }}>
+                    {chordVoicing.baseFret === 1 ? 'Open' : `${chordVoicing.baseFret}${chordVoicing.baseFret === 2 ? 'nd' : chordVoicing.baseFret === 3 ? 'rd' : 'th'} fret`}
+                  </span>
                 </span>
                 <button
                   onClick={nextVoicing}

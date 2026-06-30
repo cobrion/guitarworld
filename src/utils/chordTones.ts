@@ -254,6 +254,82 @@ export function getMovableBarrePositions(
   return barres;
 }
 
+/**
+ * Generate all playable voicings for a chord by transposing moveable
+ * barre shapes from the database to the target root.
+ */
+export function getAllVoicingsForChord(
+  targetRoot: NoteName,
+  quality: ChordQuality,
+  maxFret: number = 15,
+): ChordVoicing[] {
+  const suffix = qualitySuffix(quality);
+  const targetRootIndex = noteToIndex(targetRoot);
+  const targetChordName = targetRoot + suffix;
+
+  const directData = chordDatabase[targetChordName];
+  const voicings: ChordVoicing[] = directData ? [...directData.voicings] : [];
+
+  const ALL_ROOTS: NoteName[] = [
+    'C', 'C#', 'Db', 'D', 'D#', 'Eb', 'E', 'F',
+    'F#', 'Gb', 'G', 'G#', 'Ab', 'A', 'A#', 'Bb', 'B',
+  ];
+
+  for (const sourceRoot of ALL_ROOTS) {
+    const chordName = sourceRoot + suffix;
+    const data = chordDatabase[chordName];
+    if (!data) continue;
+
+    const sourceRootIndex = noteToIndex(sourceRoot);
+    const distance = ((targetRootIndex - sourceRootIndex) % 12 + 12) % 12;
+
+    for (const voicing of data.voicings) {
+      const hasOpenString = voicing.strings.some((s) => s === 0);
+      if (hasOpenString) continue;
+      if (voicing.barres.length === 0) continue;
+
+      const playedFrets = voicing.strings.filter((s): s is number => s !== null);
+      const maxRelativeFret = Math.max(...playedFrets);
+
+      for (const offset of [0, 12, -12]) {
+        const newBaseFret = voicing.baseFret + distance + offset;
+        if (newBaseFret < 1) continue;
+        if (newBaseFret - 1 + maxRelativeFret > maxFret) continue;
+
+        voicings.push({
+          strings: [...voicing.strings],
+          fingers: [...voicing.fingers],
+          barres: voicing.barres.map((b) => ({ ...b })),
+          baseFret: newBaseFret,
+        });
+      }
+    }
+  }
+
+  // Deduplicate by absolute fret positions
+  const seen = new Set<string>();
+  const unique: ChordVoicing[] = [];
+  for (const v of voicings) {
+    const key = v.strings
+      .map((s) => (s === null ? 'x' : s === 0 ? '0' : String(v.baseFret - 1 + s)))
+      .join('-');
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(v);
+    }
+  }
+
+  // Sort by neck position, then prefer fuller voicings
+  unique.sort((a, b) => {
+    if (a.baseFret !== b.baseFret) return a.baseFret - b.baseFret;
+    const aMuted = a.strings.filter((s) => s === null).length;
+    const bMuted = b.strings.filter((s) => s === null).length;
+    return aMuted - bMuted;
+  });
+
+  return unique;
+}
+
 /** Chord quality options grouped for the selector dropdown */
 export const QUALITY_GROUPS: { label: string; qualities: ChordQuality[] }[] = [
   {
