@@ -14,6 +14,7 @@ import { FLAT_KEYS, MAJOR_SCALE_INTERVALS, MINOR_SCALE_INTERVALS } from '@/utils
 import type { Key } from '@/types';
 import type { IntervalName } from '@/types';
 import ChordSelector from '@/components/ChordSelector';
+import ChordScaleNeck from '@/components/ChordScaleNeck';
 
 interface ChordToneInfo {
   noteName: string;
@@ -621,6 +622,34 @@ export default function ChordAnalyzer() {
           )}
         </div>
       )}
+
+      {/* Scale fretboard — chord tones in scale context */}
+      <div
+        className="rounded-lg px-4 py-3 mb-5"
+        style={{
+          backgroundColor: 'var(--color-surface)',
+          border: '1px solid var(--color-border-subtle)',
+        }}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>
+            <span style={{ color: 'var(--color-primary)' }}>{chordName}</span> tones on the{' '}
+            <span style={{ color: 'var(--color-text)' }}>
+              {selectedRoot} {MINOR_FAMILY_QUALITIES.has(selectedQuality) ? 'minor' : 'major'} scale
+            </span>
+          </span>
+          <div className="flex gap-3 text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+            <span>● chord tone</span>
+            <span style={{ opacity: 0.4 }}>● scale tone</span>
+            {chordVoicing && <span>◎ voicing</span>}
+          </div>
+        </div>
+        <ChordScaleNeck
+          root={selectedRoot}
+          quality={selectedQuality}
+          voicing={chordVoicing}
+        />
+      </div>
 
       {/* Info panel */}
       <div
