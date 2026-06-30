@@ -511,12 +511,7 @@ export default function ChordAnalyzer() {
   const formulaStr = getChordFormulaDisplay(selectedQuality);
   const notesStr = getChordNotesDisplay(selectedRoot, selectedQuality);
   const chordName = `${selectedRoot}${qualitySuffix(selectedQuality)}`;
-  const majorChordName = `${selectedRoot}`;
 
-  const majorVoicing = useMemo(() => {
-    const data = lookupChord(majorChordName, selectedRoot);
-    return data?.voicings[0] ?? null;
-  }, [majorChordName, selectedRoot]);
 
   const allChordVoicings = useMemo(() => {
     const data = lookupChord(chordName, selectedRoot);
@@ -595,62 +590,47 @@ export default function ChordAnalyzer() {
             </div>
           </div>
           <ChordTransformation root={selectedRoot} quality={selectedQuality} chordName={chordName} />
+        </div>
+      )}
 
-          {/* Fingering diagrams with voicing navigation */}
-          {(majorVoicing || chordVoicing) && (
-            <div className="mt-4 pt-3" style={{ borderTop: '1px solid var(--color-border-subtle)' }}>
-              <span className="text-xs font-medium block mb-3" style={{ color: 'var(--color-text-muted)' }}>
-                Fingering comparison
-              </span>
-              <div className="flex gap-8 justify-center flex-wrap">
-                <div className="text-center">
-                  <span className="text-[11px] font-semibold block mb-1" style={{ color: 'var(--color-text-muted)' }}>
-                    {majorChordName} Major
-                  </span>
-                  {majorVoicing ? (
-                    <div style={{ width: 120 }}>
-                      <ChordDiagram voicing={majorVoicing} chordName={majorChordName} />
-                    </div>
-                  ) : (
-                    <p className="text-xs py-4" style={{ color: 'var(--color-text-muted)' }}>No voicing</p>
-                  )}
-                </div>
-                <div className="text-center">
-                  <span className="text-[11px] font-semibold block mb-1" style={{ color: 'var(--color-primary)' }}>
-                    {chordName}
-                  </span>
-                  {chordVoicing ? (
-                    <div style={{ width: 120 }}>
-                      <ChordDiagram voicing={chordVoicing} chordName={chordName} />
-                    </div>
-                  ) : (
-                    <p className="text-xs py-4" style={{ color: 'var(--color-text-muted)' }}>No voicing</p>
-                  )}
-                  {totalVoicings > 1 && (
-                    <div className="flex items-center justify-center gap-3 mt-2">
-                      <button
-                        onClick={prevVoicing}
-                        className="px-2 py-0.5 rounded text-xs font-bold"
-                        style={{ color: 'var(--color-primary)', background: 'var(--color-surface-raised)', border: '1px solid var(--color-border)' }}
-                      >
-                        &laquo;
-                      </button>
-                      <span className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
-                        {safeIndex + 1} / {totalVoicings}
-                      </span>
-                      <button
-                        onClick={nextVoicing}
-                        className="px-2 py-0.5 rounded text-xs font-bold"
-                        style={{ color: 'var(--color-primary)', background: 'var(--color-surface-raised)', border: '1px solid var(--color-border)' }}
-                      >
-                        &raquo;
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
+      {/* Fingering diagram with voicing navigation */}
+      {chordVoicing && (
+        <div
+          className="rounded-lg px-4 py-3 mb-5"
+          style={{
+            backgroundColor: 'var(--color-surface)',
+            border: '1px solid var(--color-border-subtle)',
+          }}
+        >
+          <span className="text-xs font-medium block mb-3" style={{ color: 'var(--color-text-muted)' }}>
+            {chordName} voicing
+          </span>
+          <div className="flex flex-col items-center">
+            <div style={{ width: 120 }}>
+              <ChordDiagram voicing={chordVoicing} chordName={chordName} />
             </div>
-          )}
+            {totalVoicings > 1 && (
+              <div className="flex items-center justify-center gap-3 mt-2">
+                <button
+                  onClick={prevVoicing}
+                  className="px-2 py-0.5 rounded text-xs font-bold"
+                  style={{ color: 'var(--color-primary)', background: 'var(--color-surface-raised)', border: '1px solid var(--color-border)' }}
+                >
+                  &laquo;
+                </button>
+                <span className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                  {safeIndex + 1} / {totalVoicings}
+                </span>
+                <button
+                  onClick={nextVoicing}
+                  className="px-2 py-0.5 rounded text-xs font-bold"
+                  style={{ color: 'var(--color-primary)', background: 'var(--color-surface-raised)', border: '1px solid var(--color-border)' }}
+                >
+                  &raquo;
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
