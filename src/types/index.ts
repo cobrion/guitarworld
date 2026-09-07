@@ -75,7 +75,7 @@ export type IntervalName =
 
 export type Orientation = 'vertical' | 'horizontal';
 
-export type TabView = 'explorer' | 'analyzer' | 'scales' | 'songbook';
+export type TabView = 'explorer' | 'scales' | 'songbook';
 
 export interface ChordTone {
   string: number;

@@ -7,7 +7,6 @@ interface TabBarProps {
 
 const TABS: { key: TabView; label: string }[] = [
   { key: 'explorer', label: 'Key Explorer' },
-  { key: 'analyzer', label: 'Chord Analyzer' },
   { key: 'scales', label: 'Scales' },
   { key: 'songbook', label: 'Songbook' },
 ];

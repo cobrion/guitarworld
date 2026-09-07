@@ -5,7 +5,6 @@ import Header from '@/components/Header';
 import TabBar from '@/components/TabBar';
 import KeySelector from '@/components/KeySelector';
 import KeyChordTable from '@/components/KeyChordTable';
-import ChordAnalyzer from '@/components/ChordAnalyzer';
 import ScalesTab from '@/components/ScalesTab';
 import SongbookView from '@/components/songbook/SongbookView';
 import Footer from '@/components/Footer';
@@ -33,7 +32,6 @@ export default function App() {
                 <KeyChordTable />
               </>
             )}
-            {activeTab === 'analyzer' && <ChordAnalyzer />}
             {activeTab === 'scales' && <ScalesTab />}
             {activeTab === 'songbook' && <SongbookView />}
             <Footer />
