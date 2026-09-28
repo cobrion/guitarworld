@@ -80,27 +80,6 @@
   --transition-place: #F4C542;
   --transition-arrow: #4EAAED;
 
-  /* === Harmonic Function Colors === */
-  --hf-tonic: #5ECE7B;
-  --hf-supertonic: #7BA4C4;
-  --hf-mediant: #A78BCA;
-  --hf-subdominant: #4EAAED;
-  --hf-dominant: #F05D3E;
-  --hf-submediant: #C77DBA;
-  --hf-leading: #E88B9E;
-  --hf-nondiatonic: #E09455;
-  --hf-tonic-bg: rgba(94, 206, 123, 0.15);
-  --hf-supertonic-bg: rgba(123, 164, 196, 0.15);
-  --hf-mediant-bg: rgba(167, 139, 202, 0.15);
-  --hf-subdominant-bg: rgba(78, 170, 237, 0.15);
-  --hf-dominant-bg: rgba(240, 93, 62, 0.15);
-  --hf-submediant-bg: rgba(199, 125, 186, 0.15);
-  --hf-leading-bg: rgba(232, 139, 158, 0.15);
-  --hf-nondiatonic-bg: rgba(224, 148, 85, 0.15);
-
-  /* === Songbook === */
-  --songbook-chord-font: 'JetBrains Mono', monospace;
-
   /* === Shadows === */
   --shadow-sm: 0 1px 4px rgba(0,0,0,0.30);
   --shadow-md: 0 4px 16px rgba(0,0,0,0.40);
@@ -181,27 +160,6 @@
   --transition-lift: #A0A8B0;
   --transition-place: #C48A10;
   --transition-arrow: #2B7EC2;
-
-  /* === Harmonic Function Colors === */
-  --hf-tonic: #2D9B4E;
-  --hf-supertonic: #5A8DB8;
-  --hf-mediant: #7C5DAA;
-  --hf-subdominant: #2B7EC2;
-  --hf-dominant: #E84D35;
-  --hf-submediant: #A85A9A;
-  --hf-leading: #C55A6E;
-  --hf-nondiatonic: #D08540;
-  --hf-tonic-bg: rgba(45, 155, 78, 0.12);
-  --hf-supertonic-bg: rgba(90, 141, 184, 0.12);
-  --hf-mediant-bg: rgba(124, 93, 170, 0.12);
-  --hf-subdominant-bg: rgba(43, 126, 194, 0.12);
-  --hf-dominant-bg: rgba(232, 77, 53, 0.12);
-  --hf-submediant-bg: rgba(168, 90, 154, 0.12);
-  --hf-leading-bg: rgba(197, 90, 110, 0.12);
-  --hf-nondiatonic-bg: rgba(208, 133, 64, 0.12);
-
-  /* === Songbook === */
-  --songbook-chord-font: 'JetBrains Mono', monospace;
 
   /* === Shadows === */
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
