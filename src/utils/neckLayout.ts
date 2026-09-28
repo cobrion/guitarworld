@@ -19,6 +19,14 @@ export interface NeckLayout {
   fretNumOffset: number;
 }
 
+export function dotCenter(layout: NeckLayout, string: number, fret: number): { cx: number; cy: number } {
+  const sPos = layout.stringCoord(string);
+  const fPos = fret === 0
+    ? layout.fretCoord(0) - 16
+    : (layout.fretCoord(fret - 1) + layout.fretCoord(fret)) / 2;
+  return layout.stringsHorizontal ? { cx: fPos, cy: sPos } : { cx: sPos, cy: fPos };
+}
+
 export function buildLayout(orientation: Orientation, totalFrets: number): NeckLayout {
   const gridSpan = STRING_SPACING * 5;
   const fretSpan = FRET_SPACING * totalFrets;

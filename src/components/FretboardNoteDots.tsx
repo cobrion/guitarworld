@@ -1,35 +1,48 @@
-import type { FretboardNote } from '@/types';
+import type { FretboardNote, FretPos } from '@/types';
 import type { NeckLayout } from '@/utils/neckLayout';
+import { dotCenter } from '@/utils/neckLayout';
 import { STANDARD_TUNING_NAMES } from '@/utils/constants';
 import { noteColor } from '@/utils/fretboardNotes';
 
 interface FretboardNoteDotsProps {
   notes: FretboardNote[];
   layout: NeckLayout;
+  dimmed?: boolean;
+  onNoteClick?: (pos: FretPos) => void;
 }
 
 const DOT_RADIUS = 13;
+const HIT_RADIUS = 15;
 const FONT_SINGLE = 11;
 const FONT_DOUBLE = 7.5;
 
-export default function FretboardNoteDots({ notes, layout }: FretboardNoteDotsProps) {
-  const { stringCoord, fretCoord, stringsHorizontal } = layout;
-
+export default function FretboardNoteDots({ notes, layout, dimmed, onNoteClick }: FretboardNoteDotsProps) {
   return (
-    <g>
+    <g opacity={dimmed ? 0.15 : 1}>
       {notes.map((note) => {
-        const sPos = stringCoord(note.string);
-        const fPos = note.fret === 0
-          ? fretCoord(0) - 16
-          : (fretCoord(note.fret - 1) + fretCoord(note.fret)) / 2;
-        const cx = stringsHorizontal ? fPos : sPos;
-        const cy = stringsHorizontal ? sPos : fPos;
+        const { cx, cy } = dotCenter(layout, note.string, note.fret);
         const label = note.names.join('/');
         const [first, second] = note.names;
+        const where = `String ${6 - note.string} (${STANDARD_TUNING_NAMES[note.string]}), Fret ${note.fret}`;
+        const pos = { string: note.string, fret: note.fret };
+        const interactive = onNoteClick !== undefined;
 
         return (
-          <g key={`${note.string}-${note.fret}`}>
-            <title>{`${label} — String ${6 - note.string} (${STANDARD_TUNING_NAMES[note.string]}), Fret ${note.fret}`}</title>
+          <g
+            key={`${note.string}-${note.fret}`}
+            className={interactive ? 'fret-dot' : undefined}
+            role={interactive ? 'button' : undefined}
+            tabIndex={interactive ? 0 : undefined}
+            aria-label={interactive ? `${label}, ${where}` : undefined}
+            onClick={interactive ? () => onNoteClick(pos) : undefined}
+            onKeyDown={interactive ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onNoteClick(pos);
+              }
+            } : undefined}
+          >
+            <title>{`${label} — ${where}`}</title>
             {note.fret === 0 && (
               <circle cx={cx} cy={cy} r={DOT_RADIUS + 2} fill="var(--neck-bg)" />
             )}
@@ -41,6 +54,9 @@ export default function FretboardNoteDots({ notes, layout }: FretboardNoteDotsPr
               stroke="var(--note-dot-stroke)"
               strokeWidth={1}
             />
+            {interactive && (
+              <circle className="fret-dot-ring" cx={cx} cy={cy} r={HIT_RADIUS} fill="transparent" stroke="var(--color-text)" strokeWidth={1.5} />
+            )}
             <text
               x={cx}
               y={cy}

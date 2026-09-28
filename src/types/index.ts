@@ -77,6 +77,15 @@ export type Orientation = 'vertical' | 'horizontal';
 
 export type TabView = 'explorer' | 'scales' | 'fretboard';
 
+export interface FretPos {
+  string: number;
+  fret: number;
+}
+
+export type ShapeInterval = '3' | '4' | '5' | '7';
+
+export type ShapeQuality = 'major' | 'dominant' | 'minor';
+
 export interface FretboardNote {
   string: number;
   fret: number;

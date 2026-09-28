@@ -207,6 +207,22 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Clickable fretboard dots */
+.fret-dot {
+  cursor: pointer;
+  outline: none;
+}
+
+.fret-dot-ring {
+  stroke-opacity: 0;
+  transition: stroke-opacity 0.12s;
+}
+
+.fret-dot:hover .fret-dot-ring,
+.fret-dot:focus-visible .fret-dot-ring {
+  stroke-opacity: 0.9;
+}
+
 /* Staggered card animation */
 @keyframes cardFadeIn {
   from { opacity: 0; transform: translateY(12px); }
