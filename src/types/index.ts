@@ -75,7 +75,14 @@ export type IntervalName =
 
 export type Orientation = 'vertical' | 'horizontal';
 
-export type TabView = 'explorer' | 'scales';
+export type TabView = 'explorer' | 'scales' | 'fretboard';
+
+export interface FretboardNote {
+  string: number;
+  fret: number;
+  pitchClass: number;
+  names: string[];
+}
 
 export interface ChordTone {
   string: number;

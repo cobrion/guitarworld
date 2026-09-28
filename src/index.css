@@ -68,6 +68,22 @@
   --interval-eleventh: #F57DA0;
   --interval-thirteenth: #4DD8E8;
 
+  /* === Note colors (Fretboard tab), pitch class C=0 … B=11 === */
+  --note-0: #F2626A;
+  --note-1: #F2885A;
+  --note-2: #F2B04E;
+  --note-3: #E6D352;
+  --note-4: #B8DE5A;
+  --note-5: #72D46E;
+  --note-6: #4FD1A5;
+  --note-7: #4CC9D6;
+  --note-8: #5BA8F0;
+  --note-9: #7E8CF2;
+  --note-10: #A97EF0;
+  --note-11: #DB74D8;
+  --note-dot-text: #111A22;
+  --note-dot-stroke: transparent;
+
   /* === Neck === */
   --neck-bg: #1E2218;
   --neck-fret-marker: rgba(200, 190, 170, 0.18);
@@ -148,6 +164,22 @@
   --interval-ninth: #B8900A;
   --interval-eleventh: #D04A6B;
   --interval-thirteenth: #0088A0;
+
+  /* === Note colors (Fretboard tab) === */
+  --note-0: #E8555E;
+  --note-1: #E8794A;
+  --note-2: #E09A2E;
+  --note-3: #C9B42A;
+  --note-4: #97B83A;
+  --note-5: #4FB35A;
+  --note-6: #2EB38A;
+  --note-7: #29AAB8;
+  --note-8: #4A90DB;
+  --note-9: #6F7BE0;
+  --note-10: #9A6AE0;
+  --note-11: #C95FC6;
+  --note-dot-text: #111A22;
+  --note-dot-stroke: rgba(17, 26, 34, 0.35);
 
   /* === Neck === */
   --neck-bg: #F0E8DA;

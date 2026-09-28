@@ -8,6 +8,7 @@ interface TabBarProps {
 const TABS: { key: TabView; label: string }[] = [
   { key: 'explorer', label: 'Key Explorer' },
   { key: 'scales', label: 'Scales' },
+  { key: 'fretboard', label: 'Fretboard' },
 ];
 
 export default function TabBar({ activeTab, onTabChange }: TabBarProps) {

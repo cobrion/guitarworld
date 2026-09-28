@@ -5,6 +5,7 @@ import TabBar from '@/components/TabBar';
 import KeySelector from '@/components/KeySelector';
 import KeyChordTable from '@/components/KeyChordTable';
 import ScalesTab from '@/components/ScalesTab';
+import FretboardTab from '@/components/FretboardTab';
 import Footer from '@/components/Footer';
 import type { TabView } from '@/types';
 
@@ -27,6 +28,7 @@ export default function App() {
             </>
           )}
           {activeTab === 'scales' && <ScalesTab />}
+          {activeTab === 'fretboard' && <FretboardTab />}
           <Footer />
         </div>
       </div>
